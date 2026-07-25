@@ -53,7 +53,7 @@ G_{a_0}
 \gcd(A_{a_0},B_{a_0})
 $$
 
-in $\mathbb{F}_p[x_1,\ldots,x_{n-1}]$.
+$$\text{in} \mathbb{F}_p[x_1,\ldots,x_{n-1}]$$.
 
 Under suitable choices of the evaluation point, the monomials appearing in $G_{a_0}$ give us the expected structure of the full GCD. This first image is therefore used as a **skeletal GCD**.
 
