@@ -280,7 +280,7 @@ $$
 \end{pmatrix}.
 $$
 
-Up to the choice of whether the powers begin from zero or one, this is a Vandermonde matrix.
+Up to the choice of whether the powers begin from zero or one, this is the transposed of a Vandermonde matrix.
 
 This structure is valuable because a Vandermonde system can be solved in quadratic time, rather than by applying a generic linear-system solver.
 
@@ -299,7 +299,8 @@ $$
 \beta_{1,j},\ldots,\beta_{t_j,j}.
 $$
 
-The basis depends only on these evaluation values. Once it has been computed, it can be used to solve the corresponding interpolation problem.
+The basis depends only on these evaluation values. It's for this reason that I decided to write 2 distinct functions: supposing we have a Vandermonde system $Ax = b$, which we want to solve for different values of $b$, we would need to compute the basis only once.
+Once it has been computed, it can be used to solve the corresponding interpolation problem.
 
 The function `vandermonde_interp` then combines this basis with the known values
 
