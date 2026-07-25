@@ -73,6 +73,8 @@ To recover that information, the algorithm performs two different reconstruction
 
 Together, these steps turn a GCD in $n-1$ variables into a GCD in $n$ variables.
 
+Remark: $G_{a_i}$ is in general different from the real gcd $G$ evaluated in $a_i$: they differ by multiplication of a scalar. In order to perform dense interpolation succesfully, we need them to always differ by multiplication of the same scalar. Therefore a normalization has to be applied, but for the sake of this post we can omit this problem, which I will treat in more detail in one of the next posts. 
+
 ## Organizing the skeletal GCD
 
 For sparse interpolation, the GCD is considered as a polynomial in the first variable $x_1$, with coefficients in the remaining variables.
