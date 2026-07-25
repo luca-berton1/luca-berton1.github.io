@@ -55,6 +55,8 @@ $$
 
 $$\text{in} \quad \mathbb{F}_p[x_1,\ldots,x_{n-1}]$$.
 
+(The base case of the induction is a univariate gcd, and therefore it is easily taken care of.)
+
 Under suitable choices of the evaluation point, the monomials appearing in $G_{a_0}$ give us the expected structure of the full GCD. This first image is therefore used as a **skeletal GCD**.
 
 The skeletal GCD tells us which monomials should appear, but it does not yet tell us how their coefficients depend on $x_n$.
@@ -433,15 +435,6 @@ $$
 
 This completes the inductive passage from $n-1$ variables to $n$ variables.
 
-The helper functions are individually small, but together they implement the mathematical mechanism at the heart of Zippel's algorithm:
-
-- `skeleton_sorter` organizes the assumed sparse structure;
-- `lag_basis` prepares the interpolation basis for the structured systems;
-- `vandermonde_interp` reconstructs the coefficients of one skeletal image;
-- `incremental_newton_interp` restores the evaluated variable one image at a time;
-- `from_newt_to_poly` converts the final Newton representation into an ordinary polynomial.
-
-With this interpolation machinery in place, the next step was to combine it with the recursive GCD computation and modular reconstruction to implement the complete sparse modular GCD algorithm.
 
 ## References
 
