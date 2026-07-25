@@ -401,7 +401,7 @@ This is well suited to Zippel's algorithm because the GCD images are generated o
 
 When a new Newton coefficient is zero, the current interpolation already predicts the newly obtained value. This provides a termination criterion: once the interpolations have stabilized, the algorithm can attempt to reconstruct the complete GCD and verify it by trial division.
 
-The function `from_newt_to_poly` performs the final conversion from Newton form to the usual expanded polynomial representation.
+The function `from_newt_to_poly` performs the final conversion from evaluation points and Newton coefficients to the `dup` polynomial representation in SymPy.
 
 The Newton interpolation used here is described in *Algorithms for Computer Algebra* by Keith Geddes, Stephen Czapor and George Labahn.
 
