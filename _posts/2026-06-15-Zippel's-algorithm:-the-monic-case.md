@@ -120,23 +120,25 @@ $$
 X=(x_1,\ldots,x_{n-1}),
 $$
 
-and regard the inputs as polynomials in $X$ whose coefficients belong to $\mathbb{F}_p[x_n]$. Thus, we can write
+and regard the inputs as polynomials in $X$ whose coefficients belong to
+$\mathbb{F}_{p}[x_{n}]$. Thus, we can write
 
 $$
-A=\sum_{\alpha}a_{\alpha}(x_n)X^{\alpha},
+A=\sum_{\alpha}a_{\alpha}(x_{n})X^{\alpha},
 \qquad
-B=\sum_{\alpha}b_{\alpha}(x_n)X^{\alpha}.
+B=\sum_{\alpha}b_{\alpha}(x_{n})X^{\alpha}.
 $$
 
 The corresponding contents are
 
 $$
-a(x_n)=\operatorname{cont}_X(A),
+a(x_{n})=\operatorname{cont}_{X}(A),
 \qquad
-b(x_n)=\operatorname{cont}_X(B),
+b(x_{n})=\operatorname{cont}_{X}(B),
 $$
 
-that is, the GCDs in $\mathbb{F}_p[x_n]$ of the coefficient polynomials $a_{\alpha}(x_n)$ and $b_{\alpha}(x_n)$.
+that is, the GCDs in $\mathbb{F}_{p}[x_{n}]$ of the coefficient
+polynomials $a_{\alpha}(x_{n})$ and $b_{\alpha}(x_{n})$.
 
 The helper `_primitive` separates these contents from the primitive parts:
 
