@@ -461,7 +461,7 @@ $$
 W_{r,j}(b)=W_{s,j}(b),
 $$
 
-the corresponding columns of the interpolation system cannot be distinguished. The tuple is therefore discarded and a new one is selected.
+the corresponding columns of the interpolation system cannot be distinguished, and the matrix would become singular. The tuple is therefore discarded and a new one is selected.
 
 These checks do not prove that every aspect of the evaluation is good, but they eliminate the choices that would immediately make the interpolation systems unusable.
 
