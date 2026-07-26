@@ -557,15 +557,17 @@ A_{d}(b^{r})
 \sum_{\beta}c_{d,\beta}\beta^{r}.
 $$
 
-Thus, after the initial flattening, every new evaluation is reduced to modular exponentiation and a linear combination. The algorithm no longer needs to traverse the exponent vector of every multivariate monomial at every interpolation point.
+Thus, after the initial flattening, every new evaluation is reduced to exponentiation and a linear combination. The algorithm no longer needs to traverse the exponent vector of every multivariate monomial at every interpolation point.
 
-In the implementation, the powers begin with $r=1$ rather than $r=0$. This avoids using
-
-$$
-b^{0}=(1,\ldots,1)
-$$
-
-as the first evaluation point.
+The implementation starts with the first power of the tuple rather than
+with its zeroth power. Mathematically, using the zeroth power would still
+give a valid Vandermonde system, whose first row would consist entirely of
+ones. However, it would force every interpolation attempt to use the fixed
+evaluation point $(1,\ldots,1)$. If this point caused a leading coefficient
+to vanish or otherwise produced an unlucky specialization, choosing a new
+random base tuple would not avoid the problem. Starting from $b^1=b$ ensures
+that every evaluation point depends on the randomly chosen tuple and can
+therefore be replaced when it is unsuitable.  
 
 ### Computing the right-hand sides
 
