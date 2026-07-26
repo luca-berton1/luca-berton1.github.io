@@ -254,7 +254,7 @@ $$
 \widehat{H}=q(x_n)H.
 $$
 
-This is the normalization required for dense interpolation. Without it, every recursive or sparsely reconstructed GCD image could have a different scalar factor, and their coefficients would not be values of a common family of polynomials in $x_n$.
+This is the normalization required for dense interpolation. Every recursive or sparsely reconstructed GCD is multiplied by $q(x_n)$ evaluated in the current evaluation point, and therefore when the last variable is reconstructed, the gcd is inflated by $q(x_n)$. 
 
 This normalization should not be confused with the additional normalization problem arising inside sparse interpolation in the general non-monic case. I will discuss that separate issue in a later post.
 
