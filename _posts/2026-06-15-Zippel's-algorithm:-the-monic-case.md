@@ -402,40 +402,289 @@ The role of `sparse_gcd` can therefore be summarized as follows:
 6. update the coefficient polynomials by incremental Newton interpolation;
 7. remove the extra normalization content;
 8. verify the reconstructed GCD by exact division.
-## `zippel_interp`: reconstruction of one sparse image
+## `zippel_interp`: reconstructing one sparse image
 
-The function `zippel_interp` works one level below `sparse_gcd`.
+The function `zippel_interp` operates one level below `sparse_gcd`.
 
-At the moment it is called, the outermost variable of the current recursive step has already been fixed at some value. The purpose of `zippel_interp` is therefore not to restore that variable, but to reconstruct one GCD image in the remaining variables.
-
-Suppose its inputs belong to
+At the moment it is called, the last variable of the current recursive step has already been assigned a fixed value. Its purpose is to reconstruct the corresponding GCD image in the remaining variables:
 
 $$
-\mathbb{F}_p[x_1,\ldots,x_k].
+G\in\mathbb{F}_{p}[x_{1},\ldots,x_{k}].
 $$
 
-The first variable $x_1$ is kept symbolic. The remaining variables
+The function does not reconstruct the eliminated variable. That task is performed later by `sparse_gcd` through dense Newton interpolation.
+
+Instead, `zippel_interp` keeps the first variable $x_{1}$ symbolic, evaluates the other variables at powers of a suitable tuple, computes a collection of univariate GCDs and uses them to recover the coefficients associated with the known skeletal support.
+
+When only $x_{1}$ remains, no sparse interpolation is necessary. The function computes the univariate GCD directly and extracts the coefficients corresponding to the degrees present in the skeleton.
+
+### Choosing a suitable evaluation tuple
+
+Assume that the skeletal GCD has been organized as
 
 $$
-x_2,\ldots,x_k
+G
+=
+\sum_{j}C_{j}(x_{2},\ldots,x_{k})x_{1}^{j},
 $$
 
-are evaluated at successive powers of a randomly selected tuple.
+where each sparse coefficient has the form
 
-After these evaluations, the inputs become univariate polynomials in $x_1$. Their GCDs can therefore be computed using a univariate finite-field algorithm.
+$$
+C_{j}
+=
+\sum_{s=1}^{t_{j}}M_{s,j}W_{s,j}.
+$$
 
-The coefficients of these univariate GCDs provide the known values in the sparse interpolation systems described in the previous post.
+The monomials $W_{s,j}$ are known from the skeleton, while the scalar coefficients $M_{s,j}$ must be reconstructed.
 
-The assumed monomial support comes from the skeletal GCD. Consequently, the unknowns are only the scalar coefficients attached to those known monomials.
+The function begins by choosing a random tuple
 
-By evaluating the same monomials at successive powers of one tuple, the associated systems acquire a Vandermonde structure. The functions `lag_basis` and `vandermonde_interp` are then used to solve them efficiently.
+$$
+b=(b_{2},\ldots,b_{k})
+\in\mathbb{F}_{p}^{k-1}.
+$$
 
-After all the coefficient groups have been reconstructed, `zippel_interp` returns one complete GCD image for the current value chosen by `sparse_gcd`.
+Not every tuple is suitable. Before performing the univariate GCD computations, the implementation checks that the chosen tuple does not immediately destroy important information.
 
-The division of responsibilities is therefore important:
+First, it verifies that the leading coefficient of the first input with respect to $x_{1}$ does not vanish at the powers of the tuple that will be used. If this leading coefficient vanished, the degree in $x_{1}$ of the evaluated polynomial could decrease, and the resulting univariate GCD would no longer represent the expected image.
 
-- `zippel_interp` reconstructs one image from univariate GCDs;
-- `sparse_gcd` collects several such images and restores the eliminated variable.
+The function also evaluates the monomials belonging to every coefficient group of the skeleton. For each $W_{s,j}$, it computes
+
+$$
+\beta_{s,j}=W_{s,j}(b).
+$$
+
+Within the same coefficient $C_{j}$, these values must be distinct. If two different skeletal monomials produce the same value,
+
+$$
+W_{r,j}(b)=W_{s,j}(b),
+$$
+
+the corresponding columns of the interpolation system cannot be distinguished. The tuple is therefore discarded and a new one is selected.
+
+These checks do not prove that every aspect of the evaluation is good, but they eliminate the choices that would immediately make the interpolation systems unusable.
+
+### Building the Vandermonde bases
+
+The mathematical construction of the interpolation systems was described in the previous post. Here, the important point is how the implementation organizes the information required by those systems.
+
+For every power $x_{1}^{j}$ occurring in the skeletal GCD, the function computes the values
+
+$$
+\beta_{1,j},\ldots,\beta_{t_{j},j}
+$$
+
+of its skeletal monomials at the base tuple.
+
+These values are stored in `all_vand_basis`, a list of lists. Each inner list corresponds to one coefficient $C_{j}$ and contains the Vandermonde values associated with its monomials:
+
+$$
+\texttt{all\_vand\_basis}
+=
+\left[
+ [\beta_{1,j_{1}},\ldots,\beta_{t_{j_{1}},j_{1}}],
+ \ldots,
+ [\beta_{1,j_{m}},\ldots,\beta_{t_{j_{m}},j_{m}}]
+\right].
+$$
+
+The order of the outer list is the order of the coefficient groups in the skeletal representation. Inside each group, the values follow the order of the corresponding monomials.
+
+Preserving this order is essential: after solving a system, the reconstructed scalar coefficients must be associated with exactly the same monomials from which its Vandermonde basis was constructed.
+
+### Flattening the input polynomials
+
+The next step is to evaluate the input polynomials at successive powers of the same tuple:
+
+$$
+b^{r}
+=
+(b_{2}^{r},\ldots,b_{k}^{r}).
+$$
+
+Performing every multivariate evaluation from scratch would repeatedly require computing the same monomial expressions. The current implementation therefore converts the inputs into an evaluation-oriented representation.
+
+Consider the first input written as a polynomial in $x_{1}$:
+
+$$
+A
+=
+\sum_{d}A_{d}(x_{2},\ldots,x_{k})x_{1}^{d}.
+$$
+
+Each coefficient $A_{d}$ is a sparse polynomial. For every monomial $W$ appearing in $A_{d}$, the function first computes its value at the base tuple,
+
+$$
+\beta=W(b),
+$$
+
+and stores the original scalar coefficient under this value.
+
+The flattened representation is therefore a list indexed by the degree $d$ in $x_{1}$. Each entry is a dictionary representing a linear combination of powers of previously computed monomial values.
+
+Conceptually, if
+
+$$
+A_{d}
+=
+c_{1}W_{1}+\cdots+c_{q}W_{q},
+$$
+
+the corresponding dictionary stores the pairs
+
+$$
+W_{1}(b)\longmapsto c_{1},
+\quad\ldots,\quad
+W_{q}(b)\longmapsto c_{q}.
+$$
+
+If different monomials have the same evaluated value, their scalar coefficients are combined in the same dictionary entry.
+
+The same transformation is applied to $B$.
+
+This representation makes evaluations at powers of the tuple particularly simple. Since
+
+$$
+W(b^{r})=W(b)^{r},
+$$
+
+the value of $A_{d}$ at $b^{r}$ can be computed as
+
+$$
+A_{d}(b^{r})
+=
+\sum_{\beta}c_{d,\beta}\beta^{r}.
+$$
+
+Thus, after the initial flattening, every new evaluation is reduced to modular exponentiation and a linear combination. The algorithm no longer needs to traverse the exponent vector of every multivariate monomial at every interpolation point.
+
+In the implementation, the powers begin with $r=1$ rather than $r=0$. This avoids using
+
+$$
+b^{0}=(1,\ldots,1)
+$$
+
+as the first evaluation point.
+
+### Computing the right-hand sides
+
+For each required power $b^{r}$, the flattened representations are used to construct two univariate polynomials in $x_{1}$:
+
+$$
+A_{r}(x_{1})
+=
+A(x_{1},b_{2}^{r},\ldots,b_{k}^{r}),
+$$
+
+and
+
+$$
+B_{r}(x_{1})
+=
+B(x_{1},b_{2}^{r},\ldots,b_{k}^{r}).
+$$
+
+Their univariate GCD is then computed:
+
+$$
+H_{r}(x_{1})
+=
+\gcd(A_{r},B_{r}).
+$$
+
+Write this image as
+
+$$
+H_{r}(x_{1})
+=
+\sum_{j}h_{r,j}x_{1}^{j}.
+$$
+
+For each degree $j$ appearing in the skeleton, the coefficient $h_{r,j}$ is appended to the collection of values associated with $C_{j}$.
+
+The implementation stores these values in `eval_points`. This is a dictionary whose keys are the degrees $j$ in $x_{1}$ and whose values are lists:
+
+$$
+\texttt{eval\_points}[j]
+=
+[h_{1,j},h_{2,j},\ldots].
+$$
+
+Conceptually, this is another list-of-lists structure. Its ordering matches the ordering used for `all_vand_basis`:
+
+- the $i$-th Vandermonde basis belongs to the $i$-th coefficient group in the skeleton;
+- the corresponding list of evaluated coefficients contains the right-hand side of that same interpolation system.
+
+The two collections therefore remain aligned throughout the function.
+
+While collecting these values, the implementation also checks the support in the main variable. If a univariate GCD contains a nonzero power of $x_{1}$ that is absent from the skeletal GCD, the assumed skeleton is incompatible with the new image. In that case, the function returns `None`, allowing the surrounding algorithm to discard the current attempt.
+
+### Solving the Vandermonde systems
+
+After enough univariate GCD images have been computed, the function has all the data required for sparse interpolation.
+
+For a fixed coefficient
+
+$$
+C_{j}
+=
+\sum_{s=1}^{t_{j}}M_{s,j}W_{s,j},
+$$
+
+the collected equations are
+
+$$
+\sum_{s=1}^{t_{j}}
+M_{s,j}\beta_{s,j}^{r}
+=
+h_{r,j},
+\qquad
+r=1,\ldots,t_{j}.
+$$
+
+The values in `all_vand_basis` determine the matrix, while the corresponding values in `eval_points` determine its right-hand side.
+
+For every coefficient group, `lag_basis` first constructs the interpolation basis associated with
+
+$$
+\beta_{1,j},\ldots,\beta_{t_{j},j}.
+$$
+
+The function `vandermonde_interp` then combines this basis with
+
+$$
+h_{1,j},\ldots,h_{t_{j},j}
+$$
+
+and solves the transposed Vandermonde system in quadratic time.
+
+Because the powers of the tuple begin at $r=1$, the system can be rewritten as
+
+$$
+\sum_{s=1}^{t_{j}}
+\left(M_{s,j}\beta_{s,j}\right)
+\beta_{s,j}^{r-1}
+=
+h_{r,j}.
+$$
+
+The Vandermonde solver therefore initially reconstructs the quantities
+
+$$
+M_{s,j}\beta_{s,j}.
+$$
+
+The final multiplication by $\beta_{s,j}^{-1}$ recovers the desired coefficients
+
+$$
+M_{s,j}.
+$$
+
+The same operation is performed independently for every power of $x_{1}$ in the skeleton. The recovered scalar coefficients are then associated with their original monomials, using the common ordering of the skeleton, the Vandermonde bases and the right-hand sides.
+
+At the end of this process, `zippel_interp` returns a dictionary representing one complete GCD image for the current value of the variable previously fixed by `sparse_gcd`.
+
 
 ## Why does the not monic case need a separate sparse interpolation procedure?
 
