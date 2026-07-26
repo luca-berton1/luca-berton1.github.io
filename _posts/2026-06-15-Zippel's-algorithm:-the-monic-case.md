@@ -121,7 +121,7 @@ X=(x_1,\ldots,x_{n-1}),
 $$
 
 and regard the inputs as polynomials in $X$ whose coefficients belong to
-$\mathbb{F}_{p}[x_{n}]$. Thus, we can write
+$\mathbb{F}_p[x_n]$. Thus, we can write
 
 $$
 A=\sum_{\alpha}a_{\alpha}(x_{n})X^{\alpha},
@@ -137,7 +137,9 @@ a(x_{n})=\operatorname{cont}_{X}(A),
 b(x_{n})=\operatorname{cont}_{X}(B),
 $$
 
-that is, the GCDs in $\mathbb{F}_{p}[x_{n}]$ of the coefficient
+that is, the GCDs in $\mathbb{F}_p[x_n]$
+
+of the coefficient
 polynomials $a_{\alpha}(x_{n})$ and $b_{\alpha}(x_{n})$.
 
 The helper `_primitive` separates these contents from the primitive parts:
