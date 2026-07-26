@@ -437,21 +437,12 @@ The division of responsibilities is therefore important:
 - `zippel_interp` reconstructs one image from univariate GCDs;
 - `sparse_gcd` collects several such images and restores the eliminated variable.
 
-## Where normalization enters the algorithm
+## Why does the not monic case need a separate sparse interpolation procedure?
 
-Several GCDs are computed during the recursion, and a polynomial GCD over a field is determined only up to multiplication by a nonzero scalar.
+During sparse interpolation, the univariate GCDs used to build the Vandermonde systems can differ by independent unknown scaling factors.
+This happens because the unvariate GCDs are always monic (since we have coefficients in a field). 
 
-For interpolation to work, the different images must be represented using a consistent normalization.
-
-The implementation therefore normalizes recursive and interpolated images before combining them through dense Newton interpolation. In particular, the normalization uses information obtained from the GCD of suitable leading coefficients.
-
-This step is needed to make the evaluations correspond to values of the same polynomial coefficient functions.
-
-However, this should not be confused with the additional normalization problem that arises during sparse interpolation in the general non-monic case.
-
-In that case, the univariate GCD images used to build the Vandermonde systems can differ by independent unknown scaling factors. Those factors have to be recovered together with some of the coefficients of the skeletal GCD.
-
-I will return both to the precise normalization used during dense interpolation and to the more difficult non-monic normalization problem in a later post.
+I will return to this normalization problem in a later post.
 
 ## Random evaluation and verification
 
@@ -492,7 +483,7 @@ The implementation is contained in [pull request #29824](https://github.com/symp
 
 The pull request is still marked as a draft because some comments, documentation and style details need to be improved, but the complete algorithm is implemented and working.
 
-The next post on this pull request will focus on the non-monic case, where the sparse interpolation stage must also determine the unknown scaling factors relating the different univariate GCD images.
+The next post on this pull request will focus on the non-monic case.
 
 ## References
 
